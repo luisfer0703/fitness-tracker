@@ -1,0 +1,24 @@
+Coloca aquí tu imagen del icono con uno de estos nombres:
+
+  app-icon-source.png   (recomendado)
+  app-icon-source.jpg
+  app-icon-source.jpeg
+  app-icon-source.webp
+
+Recomendaciones:
+  - Cuadrada o casi cuadrada (ej. 512x512 o más)
+  - PNG con fondo o logo centrado
+  - Sin bordes blancos muy grandes
+
+Luego ejecuta en la terminal del proyecto:
+
+  pip install pillow
+  python scripts/generate_icons.py
+
+Sube a GitHub los archivos generados:
+  apple-touch-icon.png  (iPhone)
+  icon-192.png
+  icon-512.png
+  icon-512-maskable.png
+
+En iPhone: borra el acceso directo anterior y vuelve a añadir a pantalla de inicio.
