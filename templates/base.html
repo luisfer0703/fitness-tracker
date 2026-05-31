@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1220">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('ft-theme');
+        document.documentElement.setAttribute('data-theme', (t === 'light' || t === 'dark') ? t : 'dark');
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+  <link rel="manifest" href="{{ url_for('manifest') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+  <title>{% block title %}Fitness Tracker{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body class="{% if usuario is defined and usuario %}ft-body{% endif %}"
+  {% if usuario is defined and usuario %}
+  data-usuario-id="{{ usuario['id'] }}"
+  data-vapid-key="{{ ctx.vapid_public_key if ctx is defined and ctx else '' }}"
+  {% endif %}
+>
+  <div class="bg-glow" aria-hidden="true"></div>
+
+  {% block appbar %}
+  <header class="appbar">
+    <div class="appbar__inner">
+      <a class="brand" href="{{ url_for('index') }}">
+        <span class="brand__mark">FT</span>
+        <span class="brand__text">Fitness Tracker</span>
+      </a>
+      <div class="appbar__slot">
+        <button type="button" class="theme-toggle js-theme-toggle" aria-label="Cambiar tema">🌙</button>
+        {% block appbar_right %}{% endblock %}
+      </div>
+    </div>
+  </header>
+  {% endblock %}
+
+  <main class="{% block main_class %}container{% endblock %}">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="toasts" role="status" aria-live="polite">
+          {% for category, message in messages %}
+            <div class="toast toast--{{ category|e }}">
+              <div class="toast__dot" aria-hidden="true"></div>
+              <div class="toast__msg">{{ message }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block scripts %}{% endblock %}
+  <script src="{{ url_for('static', filename='theme.js') }}" defer></script>
+  {% if usuario is defined and usuario %}
+  <script src="{{ url_for('static', filename='app-mobile.js') }}" defer></script>
+  {% endif %}
+</body>
+</html>

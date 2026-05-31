@@ -1,0 +1,164 @@
+{% extends "app_shell.html" %}
+
+{% from "partials/ejercicios_rutina.html" import lista_ejercicios %}
+
+{% block title %}Entrenar — {{ ctx.primer_nombre }}{% endblock %}
+
+
+
+{% block ft_content %}
+<div class="ft-page-intro">
+  <h1 class="ft-page-title">Entrenar</h1>
+  <p class="ft-page-sub">
+    <a href="{{ url_for('historial_entreno', usuario_id=usuario['id']) }}" class="ft-link-action">📅 Ver calendario de entrenos</a>
+  </p>
+</div>
+
+
+
+{% if ctx.rutina_dias %}
+
+  {% if ctx.plan_hoy %}
+
+  <div class="ft-session-card">
+
+    <div class="ft-session-card__head">
+
+      <span class="ft-plan-card__label">Hoy · {{ ctx.plan_hoy.titulo }}</span>
+
+      <h2>{{ ctx.plan_hoy.enfoque }}</h2>
+
+      <p class="ft-session-meta">
+
+        <span>⏱ ~{{ ctx.plan_hoy.duracion_min }} min</span>
+
+        <span>·</span>
+
+        <span data-train-meta-count>{{ ctx.plan_hoy.hechos }}/{{ ctx.plan_hoy.total }} pasos</span>
+
+      </p>
+
+    </div>
+
+    <div class="ft-plan-progress">
+
+      <div class="bar"><span data-train-progress style="width:{{ ctx.plan_hoy.pct }}%;"></span></div>
+
+      <div class="meta">
+
+        <span data-train-pct>{{ ctx.plan_hoy.pct }}% completado</span>
+        <span data-train-count>{{ ctx.plan_hoy.hechos }} de {{ ctx.plan_hoy.total }} ejercicios</span>
+
+      </div>
+
+    </div>
+
+    {% if ctx.plan_hoy.siguiente %}
+
+    <div class="ft-session-next">
+
+      <span class="ft-session-next__lbl">Siguiente</span>
+
+      <strong>{{ ctx.plan_hoy.siguiente.nombre if ctx.plan_hoy.siguiente is mapping else ctx.plan_hoy.siguiente }}</strong>
+
+      {% if ctx.plan_hoy.siguiente is mapping and ctx.plan_hoy.siguiente.detalle %}
+
+        <span class="ft-session-next__det">{{ ctx.plan_hoy.siguiente.detalle }}</span>
+
+      {% endif %}
+
+      {% if ctx.plan_hoy.siguiente is mapping and ctx.plan_hoy.siguiente.descanso and ctx.plan_hoy.siguiente.descanso != '—' %}
+
+        <span class="ft-workout-rest">Descanso: {{ ctx.plan_hoy.siguiente.descanso }}</span>
+
+      {% endif %}
+
+    </div>
+
+    {% endif %}
+
+    <form id="formMarcarEjercicio" action="{{ url_for('marcar_ejercicio', usuario_id=usuario['id']) }}" method="POST">
+
+      <label class="ft-auto-rest">
+        <input type="checkbox" id="autoRestCheck">
+        Iniciar descanso automáticamente
+      </label>
+      <button type="submit" id="btnMarcarEjercicio" class="ft-btn-workout"{% if ctx.plan_hoy.hechos >= ctx.plan_hoy.total %} disabled{% endif %}>
+        {% if ctx.plan_hoy.hechos >= ctx.plan_hoy.total %}✓ Sesión completada{% else %}✓ Marcar paso completado{% endif %}
+      </button>
+
+    </form>
+
+  </div>
+
+
+
+  <div class="ft-card-dark">
+
+    <h3 class="ft-card-title">Rutina de hoy</h3>
+
+    {{ lista_ejercicios(ctx.plan_hoy.ejercicios, ctx.plan_hoy.hechos) }}
+
+  </div>
+
+  {% endif %}
+
+
+
+  <div class="ft-card-dark">
+
+    <h3 class="ft-card-title">Semana {{ ctx.semana_actual }}/4</h3>
+
+    <p class="ft-card-sub">{{ ctx.rutina_consejo }}</p>
+
+    {% for dia in ctx.rutina_dias %}
+
+      <details class="ft-day-details"{% if ctx.plan_hoy and loop.index0 == ctx.plan_hoy.dia_index %} open{% endif %}>
+
+        <summary>
+
+          <span class="ft-day-details__title">{{ dia.titulo }}</span>
+
+          <span class="ft-day-details__meta">{{ dia.enfoque[:40] }}{% if dia.enfoque|length > 40 %}…{% endif %} · ~{{ dia.duracion_min }} min</span>
+
+        </summary>
+
+        {% if dia.progresion %}<p class="ft-day-details__prog">{{ dia.progresion }}</p>{% endif %}
+
+        {{ lista_ejercicios(dia.ejercicios) }}
+
+      </details>
+
+    {% endfor %}
+
+  </div>
+
+{% else %}
+
+  <div class="ft-card-dark ft-empty-state">
+
+    <p>No tienes rutina activa. Configúrala en tu perfil.</p>
+
+    <a href="{{ url_for('editar_usuario', usuario_id=usuario['id']) }}" class="ft-btn-workout ft-btn-workout--ghost">Activar rutina</a>
+
+  </div>
+
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+  (function () {
+    const form = document.getElementById('formMarcarEjercicio');
+    const auto = document.getElementById('autoRestCheck');
+    if (form && auto) {
+      auto.addEventListener('change', () => {
+        form.dataset.autoRest = auto.checked ? '1' : '0';
+      });
+    }
+  })();
+</script>
+{% endblock %}
+

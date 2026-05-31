@@ -1,0 +1,32 @@
+{% macro lista_ejercicios(ejercicios, hechos=0) %}
+<ul class="ft-workout-list">
+  {% set ns = namespace(seccion='') %}
+  {% for ej in ejercicios %}
+    {% set tipo = ej.tipo if ej is mapping else 'fuerza' %}
+    {% if tipo != ns.seccion %}
+      {% set ns.seccion = tipo %}
+      <li class="ft-workout-section">
+        {% if tipo == 'calentamiento' %}🔥 Calentamiento
+        {% elif tipo == 'estiramiento' %}🧘 Estiramiento
+        {% elif tipo == 'cardio' %}❤️ Cardio
+        {% else %}💪 Bloque principal
+        {% endif %}
+      </li>
+    {% endif %}
+    <li class="ft-workout-item ft-workout-item--{{ tipo }}{% if loop.index0 < hechos %} ft-workout-item--done{% endif %}" data-ej-index="{{ loop.index0 }}">
+      <div class="ft-workout-item__main">
+        <span class="ft-workout-item__icon">{{ ej.icono if ej is mapping else '💪' }}</span>
+        <div class="ft-workout-item__body">
+          <span class="ft-workout-item__name">{{ ej.nombre if ej is mapping else ej }}</span>
+          {% if ej is mapping and ej.detalle %}
+          <span class="ft-workout-item__detail">{{ ej.detalle }}</span>
+          {% endif %}
+        </div>
+      </div>
+      {% if ej is mapping and ej.descanso and ej.descanso != '—' and tipo not in ('cardio',) %}
+      <span class="ft-workout-rest" title="Descanso entre series">⏱ {{ ej.descanso }}</span>
+      {% endif %}
+    </li>
+  {% endfor %}
+</ul>
+{% endmacro %}

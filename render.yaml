@@ -1,0 +1,23 @@
+# Blueprint Render (plan gratuito)
+# https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: fitness-tracker
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -w 1 -b 0.0.0.0:$PORT wsgi:application
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: DATA_DIR
+        value: /opt/render/project/src/data
+      - key: SECRET_KEY
+        generateValue: true
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_CLAIM_EMAIL
+        sync: false

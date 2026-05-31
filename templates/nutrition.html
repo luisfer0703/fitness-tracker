@@ -1,0 +1,110 @@
+{% extends "app_shell.html" %}
+{% block title %}Nutrición — {{ ctx.primer_nombre }}{% endblock %}
+
+{% block ft_content %}
+<div class="ft-page-intro">
+  <h1 class="ft-page-title">Nutrición</h1>
+</div>
+
+{% if ctx.kcal_objetivo %}
+<div class="ft-nutri-stats">
+  <div class="ft-stat">
+    <div class="ico">🍽️</div>
+    <div class="val">{{ ctx.kcal_objetivo }}</div>
+    <div class="lbl">kcal objetivo</div>
+  </div>
+  <div class="ft-stat">
+    <div class="ico">🥩</div>
+    <div class="val">{{ ctx.proteina_g }}</div>
+    <div class="lbl">g proteína</div>
+  </div>
+  <div class="ft-stat">
+    <div class="ico">⚖️</div>
+    <div class="val">{{ ctx.peso_actual|round(1) }}</div>
+    <div class="lbl">kg actual</div>
+  </div>
+</div>
+
+<div class="ft-card-dark">
+  <h3 class="ft-card-title">Plan alimenticio estimado</h3>
+  <p class="p" style="margin:0 0 .5rem;">{{ ctx.nutri_nota }}</p>
+  <p class="ft-nutri-objetivo-badge">{{ ctx.alimentos.objetivo_label }}</p>
+  {% if ctx.kcal_base %}
+  <p class="p" style="margin:.5rem 0 0;font-size:.85rem;">Mantenimiento aprox.: <strong>{{ ctx.kcal_base }} kcal</strong> · Meta: <strong>{{ ctx.objetivo_peso }} kg</strong></p>
+  {% endif %}
+</div>
+
+{% include 'partials/water_widget.html' %}
+
+{% if ctx.alimentos.comidas_dia %}
+<div class="ft-card-dark">
+  <h3 class="ft-card-title">Comidas ejemplo del día</h3>
+  <p class="p" style="margin:0 0 .85rem;font-size:.82rem;">Sugerencias según tu objetivo. Ajusta porciones a tu rutina.</p>
+  <div class="ft-meals-grid">
+    {% for comida in ctx.alimentos.comidas_dia %}
+    <div class="ft-meal-block">
+      <h4 class="ft-meal-block__title">{{ comida.icono }} {{ comida.titulo }}</h4>
+      <ul class="ft-meal-list">
+        {% for item in comida.platos %}
+        <li>
+          <strong>{{ item.nombre }}</strong>
+          {% if item.nota %}<span class="ft-meal-nota">{{ item.nota }}</span>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="ft-card-dark">
+  <h3 class="ft-card-title">Alimentos recomendados para ti</h3>
+  {% if ctx.alimentos.tip_proteina %}
+  <p class="p" style="margin:0 0 .75rem;font-size:.82rem;">{{ ctx.alimentos.tip_proteina }}</p>
+  {% endif %}
+
+  <div class="ft-food-accordion">
+    {% for cat in ctx.alimentos.categorias %}
+    <details class="ft-food-group" {% if loop.first %}open{% endif %}>
+      <summary>{{ cat.titulo }} <span class="ft-food-count">{{ cat.lista|length }}</span></summary>
+      <ul class="ft-food-list">
+        {% for item in cat.lista %}
+        <li class="ft-food-item">
+          <div class="ft-food-item__main">
+            <strong>{{ item.nombre }}</strong>
+            <span class="ft-food-porcion">{{ item.porcion }}</span>
+          </div>
+          {% if item.nota %}<span class="ft-food-nota">{{ item.nota }}</span>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </details>
+    {% endfor %}
+
+    <details class="ft-food-group ft-food-group--warn">
+      <summary>⚠️ Limitar o evitar</summary>
+      <ul class="ft-food-list ft-food-list--simple">
+        {% for item in ctx.alimentos.evitar %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    </details>
+  </div>
+</div>
+
+<div class="ft-card-dark">
+  <h3 class="ft-card-title">Consejos generales</h3>
+  <ul class="clean" style="margin:0;">
+    <li>Prioriza proteína en cada comida ({{ ctx.proteina_g }} g/día).</li>
+    <li>Bebe suficiente agua (2–3 L según actividad).</li>
+    <li>Combina con tu rutina de entrenamiento para mejores resultados.</li>
+    {% if ctx.recomendacion %}<li>{{ ctx.recomendacion }}</li>{% endif %}
+  </ul>
+</div>
+{% else %}
+<div class="ft-card-dark">
+  <p class="p">Completa tu perfil y registra tu peso para obtener estimaciones y alimentos recomendados.</p>
+</div>
+{% endif %}
+{% endblock %}

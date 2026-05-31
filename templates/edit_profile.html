@@ -1,0 +1,168 @@
+{% extends "app_shell.html" %}
+
+{% block title %}Editar perfil — {{ usuario["nombre"] }}{% endblock %}
+
+{% block ft_theme %}{% endblock %}
+{% block ft_home_row %}{% endblock %}
+
+{% block ft_content %}
+<header class="ft-page-head">
+  <div class="ft-page-head__toolbar">
+    <a href="{{ url_for('dashboard', usuario_id=usuario['id']) }}" class="ft-back-btn" aria-label="Volver al inicio">←</a>
+    <div class="ft-page-head__actions">
+      {% include 'partials/home_btn.html' %}
+      <button type="button" class="theme-toggle js-theme-toggle" aria-label="Cambiar tema">🌙</button>
+    </div>
+  </div>
+  <div class="ft-page-head__main">
+    <h1 class="ft-page-title">Editar perfil</h1>
+    <p class="ft-page-sub">Actualiza tu información y preferencias.</p>
+  </div>
+</header>
+
+<div class="ft-card-dark ft-profile-hero">
+  <div class="avatar" style="width:58px;height:58px;">
+    {% if usuario["foto_perfil"] %}
+      <img src="{{ foto_perfil_src(usuario['foto_perfil']) }}" alt="Foto de {{ usuario['nombre'] }}">
+    {% else %}
+      <span style="color:var(--ft-muted);font-weight:900;">{{ (usuario["nombre"] or "U")[:1]|upper }}</span>
+    {% endif %}
+  </div>
+  <div>
+    <strong>{{ usuario["nombre"] }}</strong>
+    <p class="p" style="margin:.2rem 0 0;font-size:.85rem;">{{ usuario["peso_actual"] }} kg · Meta {{ usuario["objetivo_peso"] }} kg</p>
+  </div>
+</div>
+
+<form action="{{ url_for('editar_usuario', usuario_id=usuario['id']) }}" method="POST" enctype="multipart/form-data" class="ft-form">
+
+  <div class="ft-card-dark">
+    <h2 class="ft-card-title">Datos del usuario</h2>
+    <div class="ft-form-grid">
+      <div class="field">
+        <label class="label">Nombre</label>
+        <input type="text" name="nombre" required value="{{ usuario['nombre'] }}">
+      </div>
+      <div class="field">
+        <label class="label">Edad</label>
+        <input type="number" name="edad" required min="1" max="120" value="{{ usuario['edad'] }}">
+      </div>
+      <div class="field">
+        <label class="label">Estatura (m)</label>
+        <input type="number" step="0.01" name="estatura" required min="0.5" max="2.5" value="{{ usuario['estatura'] }}">
+      </div>
+      <div class="field">
+        <label class="label">Peso objetivo (kg)</label>
+        <input type="number" step="0.1" name="objetivo_peso" required min="20" max="300" value="{{ usuario['objetivo_peso'] }}">
+      </div>
+      <div class="field">
+        <label class="label">Sexo (opcional)</label>
+        <select name="sexo">
+          <option value="" {% if not usuario['sexo'] %}selected{% endif %}>Prefiero no decir</option>
+          <option value="m" {% if usuario['sexo']=='m' %}selected{% endif %}>Masculino</option>
+          <option value="f" {% if usuario['sexo']=='f' %}selected{% endif %}>Femenino</option>
+          <option value="x" {% if usuario['sexo']=='x' %}selected{% endif %}>Otro</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="label">Actividad (opcional)</label>
+        <select name="actividad">
+          <option value="" {% if not usuario['actividad'] %}selected{% endif %}>No sé</option>
+          <option value="baja" {% if usuario['actividad']=='baja' %}selected{% endif %}>Baja</option>
+          <option value="media" {% if usuario['actividad']=='media' %}selected{% endif %}>Media</option>
+          <option value="alta" {% if usuario['actividad']=='alta' %}selected{% endif %}>Alta</option>
+        </select>
+      </div>
+      <div class="field ft-form-grid__full">
+        <label class="label">Actualizar foto de perfil (opcional)</label>
+        <div class="ft-file-wrap">
+          <input type="file" name="foto_perfil" accept="image/*" class="ft-file-input">
+        </div>
+        {% if usuario['foto_perfil'] %}
+        <label class="ft-check-label">
+          <input type="checkbox" name="eliminar_foto" value="1">
+          Eliminar foto actual
+        </label>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="ft-card-dark">
+    <h2 class="ft-card-title">Rutina</h2>
+    <label class="ft-check-label">
+      <input type="checkbox" name="quiere_rutina" value="1" {% if usuario['quiere_rutina'] %}checked{% endif %}>
+      Quiero rutina personalizada
+    </label>
+    <div class="ft-form-grid">
+      <div class="field">
+        <label class="label">Días por semana</label>
+        <select name="dias_rutina">
+          {% for d in [2,3,4,5,6,7] %}
+          <option value="{{ d }}" {% if usuario['dias_rutina']==d %}selected{% endif %}>{{ d }} días</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label class="label">Dónde entrenas</label>
+        <select name="tipo_entreno">
+          <option value="gym" {% if usuario['tipo_entreno']=='gym' %}selected{% endif %}>Gimnasio</option>
+          <option value="casa" {% if usuario['tipo_entreno']=='casa' %}selected{% endif %}>En casa (sin equipo)</option>
+          <option value="mixto" {% if usuario['tipo_entreno']=='mixto' %}selected{% endif %}>Mixto</option>
+        </select>
+      </div>
+    </div>
+    <p class="ft-field-hint">En casa: solo peso corporal y cardio dentro de tu hogar.</p>
+  </div>
+
+  <div class="ft-card-dark">
+    <h2 class="ft-card-title">Apariencia</h2>
+    <p class="p" style="margin:0 0 .85rem;font-size:.85rem;">Elige cómo quieres ver la app. Se guarda en este dispositivo.</p>
+    <div class="theme-picker">
+      <button type="button" class="btn btn--ghost js-theme-set" data-theme="dark">🌙 Oscuro</button>
+      <button type="button" class="btn btn--ghost js-theme-set" data-theme="light">☀️ Claro</button>
+    </div>
+  </div>
+
+  <div class="ft-card-dark">
+    <h2 class="ft-card-title">Recordatorios y pasos</h2>
+    <label class="ft-check-label">
+      <input type="checkbox" name="recordatorio_activo" value="1" {% if usuario['recordatorio_activo']|default(0) %}checked{% endif %}>
+      Activar recordatorio diario (push)
+    </label>
+    <div class="ft-form-grid">
+      <div class="field">
+        <label class="label">Hora del recordatorio</label>
+        <div class="ft-input-wrap">
+          <input type="time" name="recordatorio_hora" value="{{ usuario['recordatorio_hora'] or '09:00' }}">
+        </div>
+      </div>
+      <div class="field">
+        <label class="label">Meta de pasos diarios</label>
+        <div class="ft-input-wrap">
+          <input type="number" name="meta_pasos" min="1000" max="50000" step="500"
+            placeholder="Auto según actividad"
+            value="{{ usuario['meta_pasos'] or '' }}">
+        </div>
+      </div>
+    </div>
+
+    {% if ctx is defined %}
+    <div class="ft-form-actions">
+      <button type="button" id="btnActivarPush" class="ft-btn-secondary">🔔 Activar notificaciones</button>
+      {% if ctx.push_habilitado %}
+      <button type="submit" formaction="{{ url_for('push_probar', usuario_id=usuario['id']) }}" formmethod="POST" class="ft-btn-secondary">Enviar notificación de prueba</button>
+      {% else %}
+      <p class="p" style="margin:0;font-size:.78rem;">Servidor sin VAPID: configura <code>.env</code> para push.</p>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <button type="submit" class="ft-btn-workout ft-form-submit">Guardar cambios</button>
+</form>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{% endblock %}

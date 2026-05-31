@@ -1,0 +1,65 @@
+{% extends "app_shell.html" %}
+{% block title %}Metas — {{ ctx.primer_nombre }}{% endblock %}
+
+{% block ft_content %}
+<h1 class="ft-page-title">Tus metas</h1>
+<p class="p" style="margin:-.5rem 0 1rem;font-size:.88rem;">Resumen de objetivos y hábitos clave.</p>
+
+{% if ctx.progreso is not none %}
+<div class="ft-card-dark">
+  <div class="ft-meta-row">
+    <span>Peso · meta {{ ctx.objetivo_peso }} kg</span>
+    <strong class="ft-meta-row__val">{{ ctx.progreso|round(0) }}%</strong>
+  </div>
+  <div class="ft-meta-bar">
+    <span style="width:{{ [ctx.progreso, 100]|min }}%;"></span>
+  </div>
+  <p class="p" style="margin:.5rem 0 0;font-size:.85rem;">{{ ctx.peso_actual|round(1) }} kg actuales</p>
+</div>
+{% endif %}
+
+<div class="ft-meta-grid">
+  <div class="ft-meta-card">
+    <span class="ft-meta-card__ico">👟</span>
+    <div class="ft-meta-card__val">{{ ctx.stats.pasos|int }}</div>
+    <div class="ft-meta-card__lbl">Pasos hoy</div>
+    <div class="ft-meta-card__sub">Meta {{ ctx.meta_pasos|int }}</div>
+  </div>
+  <div class="ft-meta-card">
+    <span class="ft-meta-card__ico">🔥</span>
+    <div class="ft-meta-card__val">{{ ctx.streak }}</div>
+    <div class="ft-meta-card__lbl">Racha (días)</div>
+    <div class="ft-meta-card__sub">Actividad registrada</div>
+  </div>
+  <div class="ft-meta-card">
+    <span class="ft-meta-card__ico">🏋️</span>
+    <div class="ft-meta-card__val">{% if ctx.plan_hoy %}{{ ctx.plan_hoy.pct }}%{% else %}—{% endif %}</div>
+    <div class="ft-meta-card__lbl">Entreno hoy</div>
+    <div class="ft-meta-card__sub">{% if ctx.plan_hoy %}{{ ctx.plan_hoy.hechos }}/{{ ctx.plan_hoy.total }}{% else %}Sin rutina{% endif %}</div>
+  </div>
+</div>
+
+{% if ctx.tiene_rutina %}
+<div class="ft-card-dark">
+  <h3 class="ft-card-title">Rutina activa</h3>
+  <p class="p" style="margin:0;font-size:.88rem;">{{ ctx.dias_rutina }} días/semana · {{ ctx.tipo_entreno_label }} · Semana {{ ctx.semana_actual }}/4</p>
+  <a href="{{ url_for('entrenar', usuario_id=usuario['id']) }}" class="ft-link-action">Ir a entrenar →</a>
+</div>
+{% endif %}
+
+<div class="ft-card-dark">
+  <h3 class="ft-card-title">Recordatorios</h3>
+  <ul class="ft-habits-list">
+    <li>Registra tu peso al menos 1 vez por semana</li>
+    <li>Completa el entreno del día o marca tus pasos</li>
+    <li>Revisa tu plan nutricional según tu objetivo</li>
+  </ul>
+  <a href="{{ url_for('editar_usuario', usuario_id=usuario['id']) }}" class="ft-link-action">Ajustar recordatorios en perfil →</a>
+</div>
+
+{% if ctx.semanas_objetivo %}
+<div class="ft-card-dark">
+  <p class="p" style="margin:0;font-size:.88rem;">📊 A tu ritmo actual, podrías alcanzar tu peso meta en aprox. <strong>{{ ctx.semanas_objetivo }} semanas</strong>.</p>
+</div>
+{% endif %}
+{% endblock %}

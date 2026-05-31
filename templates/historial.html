@@ -1,0 +1,113 @@
+{% extends "app_shell.html" %}
+{% block title %}Historial — {{ ctx.primer_nombre }}{% endblock %}
+
+{% block ft_content %}
+{% set h = ctx.historial_entreno %}
+<div class="ft-page-intro">
+  <h1 class="ft-page-title">Historial y metas</h1>
+</div>
+
+{% if ctx.progreso is not none %}
+<div class="ft-card-dark">
+  <div class="ft-meta-row">
+    <span>Peso · meta {{ ctx.objetivo_peso }} kg</span>
+    <strong class="ft-meta-row__val">{{ ctx.progreso|round(0) }}%</strong>
+  </div>
+  <div class="ft-meta-bar">
+    <span style="width:{{ [ctx.progreso, 100]|min }}%;"></span>
+  </div>
+  <p class="p" style="margin:.5rem 0 0;font-size:.85rem;">{{ ctx.peso_actual|round(1) }} kg actuales</p>
+</div>
+{% endif %}
+
+<div class="ft-meta-grid">
+  <div class="ft-meta-card">
+    <span class="ft-meta-card__ico">👟</span>
+    <div class="ft-meta-card__val">{{ ctx.stats.pasos|int }}</div>
+    <div class="ft-meta-card__lbl">Pasos hoy</div>
+  </div>
+  <div class="ft-meta-card">
+    <span class="ft-meta-card__ico">🔥</span>
+    <div class="ft-meta-card__val">{{ ctx.streak }}</div>
+    <div class="ft-meta-card__lbl">Racha</div>
+  </div>
+  <div class="ft-meta-card">
+    <span class="ft-meta-card__ico">🏋️</span>
+    <div class="ft-meta-card__val">{% if ctx.plan_hoy %}{{ ctx.plan_hoy.pct }}%{% else %}—{% endif %}</div>
+    <div class="ft-meta-card__lbl">Entreno hoy</div>
+  </div>
+</div>
+
+<div class="ft-hist-stats">
+  <div class="ft-meta-card">
+    <span class="ft-meta-card__val">{{ h.dias_activos }}</span>
+    <span class="ft-meta-card__lbl">Días activos (90 d)</span>
+  </div>
+  <div class="ft-meta-card">
+    <span class="ft-meta-card__val">{{ h.completos }}</span>
+    <span class="ft-meta-card__lbl">Completas</span>
+  </div>
+  <div class="ft-meta-card">
+    <span class="ft-meta-card__val">{{ h.parciales }}</span>
+    <span class="ft-meta-card__lbl">Parciales</span>
+  </div>
+</div>
+
+<div class="ft-card-dark">
+  <h3 class="ft-card-title">Calendario de entrenos</h3>
+  <div class="ft-cal-nav">
+    <a href="{{ url_for('historial_entreno', usuario_id=usuario['id'], year=h.prev.year, month=h.prev.month) }}" class="ft-cal-nav__btn">‹</a>
+    <strong>{{ h.mes_label }}</strong>
+    {% if h.puede_siguiente %}
+    <a href="{{ url_for('historial_entreno', usuario_id=usuario['id'], year=h.next.year, month=h.next.month) }}" class="ft-cal-nav__btn">›</a>
+    {% else %}
+    <span class="ft-cal-nav__btn ft-cal-nav__btn--off">›</span>
+    {% endif %}
+  </div>
+
+  <div class="ft-cal-legend">
+    <span><i class="ft-cal-dot ft-cal-dot--completo"></i> 6+ ejercicios</span>
+    <span><i class="ft-cal-dot ft-cal-dot--parcial"></i> Parcial</span>
+    <span><i class="ft-cal-dot ft-cal-dot--vacio"></i> Sin registro</span>
+  </div>
+
+  <div class="ft-cal-grid">
+    {% for d in h.dias_semana %}
+    <div class="ft-cal-head">{{ d }}</div>
+    {% endfor %}
+    {% for week in h.weeks %}
+      {% for cell in week %}
+        {% if cell.tipo == 'pad' %}
+        <div class="ft-cal-cell ft-cal-cell--pad"></div>
+        {% else %}
+        <div class="ft-cal-cell ft-cal-cell--{{ cell.estado }}{% if cell.es_hoy %} ft-cal-cell--hoy{% endif %}"
+          title="{% if cell.hechos %}{{ cell.hechos }} ejercicios{% else %}Sin entreno{% endif %}">
+          <span class="ft-cal-day">{{ cell.dia }}</span>
+          {% if cell.hechos %}<span class="ft-cal-hechos">{{ cell.hechos }}</span>{% endif %}
+        </div>
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+  </div>
+</div>
+
+{% if h.ultimos %}
+<div class="ft-card-dark">
+  <h3 class="ft-card-title">Últimas sesiones</h3>
+  <ul class="ft-hist-list">
+    {% for s in h.ultimos %}
+    <li class="ft-hist-list__item ft-hist-list__item--{{ s.estado }}">
+      <span>{{ s.fecha_fmt }}</span>
+      <strong>{{ s.hechos }} ejercicios</strong>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% else %}
+<div class="ft-card-dark">
+  <p class="p" style="margin:0;">Marca ejercicios en <strong>Entrenar</strong> para ver tu historial aquí.</p>
+</div>
+{% endif %}
+
+<a href="{{ url_for('entrenar', usuario_id=usuario['id']) }}" class="ft-btn-workout" style="display:block;text-align:center;text-decoration:none;margin-top:1rem;">Ir a entrenar hoy</a>
+{% endblock %}

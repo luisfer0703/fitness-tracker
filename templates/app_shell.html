@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='fitness.css') }}">
+{% endblock %}
+
+{% block appbar %}{% endblock %}
+{% block main_class %}ft-app{% endblock %}
+
+{% block content %}
+  {% block ft_theme %}{% endblock %}
+  {% block ft_home_row %}
+  <div class="ft-app-toolbar">
+    {% block ft_toolbar_left %}{% include 'partials/home_btn.html' %}{% endblock %}
+    <div class="ft-app-toolbar__end">
+      <button type="button" class="theme-toggle js-theme-toggle" aria-label="Cambiar tema">🌙</button>
+    </div>
+  </div>
+  {% endblock %}
+  {% block ft_content %}{% endblock %}
+  <div class="ft-scroll-pad" aria-hidden="true"></div>
+  {% include 'partials/ui_overlays.html' %}
+  {% include 'partials/tabbar.html' %}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='app-interactions.js') }}" defer></script>
+{% endblock %}

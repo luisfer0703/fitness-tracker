@@ -1,0 +1,201 @@
+{% extends "app_shell.html" %}
+{% block title %}Inicio — {{ ctx.primer_nombre }}{% endblock %}
+
+{% block ft_theme %}{% endblock %}
+{% block ft_home_row %}{% endblock %}
+
+{% block ft_content %}
+<header class="ft-home-header">
+  <div class="ft-greeting">
+    <h1>¡Hola {{ ctx.primer_nombre }}!</h1>
+    <p class="ft-date">{{ ctx.fecha_hoy }}</p>
+  </div>
+  <div class="ft-header-actions">
+    {% include 'partials/home_btn.html' %}
+    <button type="button" class="theme-toggle js-theme-toggle" aria-label="Cambiar tema">🌙</button>
+    <a href="{{ url_for('progreso', usuario_id=usuario['id']) }}" class="ft-bell" aria-label="Notificaciones">
+      🔔
+      {% if ctx.alerts %}<span class="ft-bell__badge"></span>{% endif %}
+    </a>
+    <a href="{{ url_for('editar_usuario', usuario_id=usuario['id']) }}" class="ft-profile-mini">
+      <div class="avatar" style="width:40px;height:40px;">
+        {% if usuario['foto_perfil'] %}
+          <img src="{{ foto_perfil_src(usuario['foto_perfil']) }}" alt="">
+        {% else %}
+          <span style="font-weight:800;color:var(--ft-muted);">{{ ctx.primer_nombre[:1]|upper }}</span>
+        {% endif %}
+      </div>
+      <div class="ft-profile-mini__meta">
+        <div class="name">{{ ctx.primer_nombre }}</div>
+        <div class="ft-streak">🔥 {{ ctx.streak }} días</div>
+      </div>
+    </a>
+  </div>
+</header>
+
+<div class="ft-hero-grid">
+  <div class="ft-plan-card">
+    <span class="ft-plan-card__label">Tu plan de hoy</span>
+    {% if ctx.plan_hoy %}
+      <h2>{{ ctx.plan_hoy.enfoque }}</h2>
+      <p class="dur">⏱ ~{{ ctx.plan_hoy.duracion_min }} min · {{ ctx.plan_hoy.total }} pasos</p>
+      <div class="ft-plan-progress">
+        <div class="bar"><span style="width:{{ ctx.plan_hoy.pct }}%;"></span></div>
+        <div class="meta">
+          <span>{{ ctx.plan_hoy.pct }}% completado</span>
+          <span>{{ ctx.plan_hoy.hechos }} de {{ ctx.plan_hoy.total }} ejercicios</span>
+        </div>
+      </div>
+      {% if ctx.plan_hoy.siguiente %}
+        <p class="ft-plan-next">
+          Siguiente: <strong>{{ ctx.plan_hoy.siguiente.nombre if ctx.plan_hoy.siguiente is mapping else ctx.plan_hoy.siguiente }}</strong>
+          {% if ctx.plan_hoy.siguiente is mapping and ctx.plan_hoy.siguiente.descanso and ctx.plan_hoy.siguiente.descanso != '—' %}
+            <span class="ft-plan-next__rest">· descanso {{ ctx.plan_hoy.siguiente.descanso }}</span>
+          {% endif %}
+        </p>
+      {% endif %}
+      <a href="{{ url_for('entrenar', usuario_id=usuario['id']) }}" style="display:inline-block;margin-top:.5rem;font-size:.8rem;font-weight:800;color:#022;text-decoration:underline;">Continuar entreno →</a>
+    {% else %}
+      <h2>Sin rutina activa</h2>
+      <p class="dur">Activa tu plan en el perfil</p>
+      <a href="{{ url_for('editar_usuario', usuario_id=usuario['id']) }}" style="margin-top:auto;font-weight:700;color:#022;">Configurar rutina</a>
+    {% endif %}
+  </div>
+
+  <div class="ft-coach-card">
+    <div class="ft-coach-card__head">
+      <div class="avatar-sm">🤖</div>
+      <span>Tu coach</span>
+    </div>
+    <p class="ft-coach-msg">{{ ctx.mensaje_entrenador }}</p>
+    <div class="ft-rings" aria-hidden="true">
+      <div class="ft-ring ft-ring--1"></div>
+      <div class="ft-ring ft-ring--2"></div>
+      <div class="ft-ring ft-ring--3"></div>
+    </div>
+    <a href="{{ url_for('historial_entreno', usuario_id=usuario['id']) }}" style="text-align:center;font-size:.78rem;color:var(--ft-teal);font-weight:700;text-decoration:none;">Ver historial →</a>
+  </div>
+</div>
+
+<div class="ft-stats-wrap ft-skeleton-wrap ft-skeleton-wrap--loading" data-skeleton="stats">
+  <div class="ft-skeleton ft-skeleton-stats" aria-hidden="true">
+    <div class="ft-skeleton-block"></div>
+    <div class="ft-skeleton-block"></div>
+    <div class="ft-skeleton-block"></div>
+  </div>
+  <div class="ft-stats ft-skeleton-content" hidden>
+  <div class="ft-stat" data-pasos-synced>
+    <div class="ico">👟</div>
+    <div class="val">{{ ctx.stats.pasos|int }}</div>
+    <div class="lbl">Pasos{% if ctx.stats.pasos_reales %} <span class="ft-badge ft-badge--ok">real</span>{% endif %}</div>
+    <div class="sub">/ {{ ctx.stats.meta_pasos|int }}{% if ctx.pasos_fuente %} · {{ ctx.pasos_fuente }}{% endif %}</div>
+  </div>
+  <div class="ft-stat">
+    <div class="ico">🔥</div>
+    <div class="val">{{ ctx.stats.kcal }}</div>
+    <div class="lbl">Calorías</div>
+  </div>
+  <div class="ft-stat">
+    <div class="ico">⏱️</div>
+    <div class="val">{{ ctx.stats.minutos }}m</div>
+    <div class="lbl">Actividad</div>
+  </div>
+  </div>
+</div>
+
+<div class="ft-week-card ft-skeleton-wrap ft-skeleton-wrap--loading" data-skeleton="chart">
+  <div class="ft-skeleton ft-skeleton-chart" aria-hidden="true"></div>
+  <div class="ft-skeleton-content" hidden>
+  <div class="ft-week-card__head">
+    <h3>Progreso semanal</h3>
+    <span class="ft-week-pct">{{ ctx.chart_semana.porcentaje }}%</span>
+  </div>
+  <div class="ft-chart-mini">
+    <canvas id="chartSemana"></canvas>
+  </div>
+  </div>
+</div>
+
+{% include 'partials/water_widget.html' %}
+
+<section class="ft-recent">
+  <h3>Actividad reciente</h3>
+  {% for item in ctx.recientes %}
+    <a href="{{ url_for('progreso', usuario_id=usuario['id']) }}" class="ft-recent-item">
+      <span class="ico">{{ item.icono }}</span>
+      <div>
+        <div class="tit">{{ item.titulo }}</div>
+        <div class="det">{{ item.detalle }} · {{ item.fecha }}</div>
+      </div>
+    </a>
+  {% else %}
+    <p style="color:var(--ft-muted);font-size:.9rem;">Registra tu peso o completa un entreno para ver actividad.</p>
+  {% endfor %}
+</section>
+
+<div class="ft-card-dark ft-pasos-form">
+  <h3 class="ft-card-title" style="margin-bottom:.5rem;">Pasos del día</h3>
+  <p class="p" style="margin:0 0 .85rem;font-size:.82rem;">Registra tus pasos del día manualmente.</p>
+  <form action="{{ url_for('registrar_pasos', usuario_id=usuario['id']) }}" method="POST" class="ft-inline-form">
+    <input type="number" name="pasos" min="0" max="100000" placeholder="Ej. 8432" required class="ft-inline-form__input">
+    <input type="hidden" name="fuente" value="manual">
+    <button type="submit" class="ft-inline-form__btn">Guardar</button>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const canvas = document.getElementById('chartSemana');
+    if (!canvas) return;
+
+    const wrap = canvas.closest('.ft-skeleton-content');
+    if (wrap) {
+      wrap.hidden = false;
+      wrap.removeAttribute('hidden');
+    }
+
+    const data = {{ ctx.chart_semana['values'] | tojson }};
+    const labels = {{ ctx.chart_semana['labels'] | tojson }};
+    new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: data,
+          borderColor: '#26a69a',
+          backgroundColor: 'rgba(38,166,154,.12)',
+          fill: true,
+          tension: 0.35,
+          pointRadius: 4,
+          pointHoverRadius: 5,
+          borderWidth: 2,
+          spanGaps: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: {
+          callbacks: {
+            label: function (ctx) { return ctx.parsed.y + '% actividad'; }
+          }
+        }},
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#8b9cb3', font: { size: 11, weight: '600' } } },
+          y: { display: false, min: 0, max: 100 }
+        }
+      }
+    });
+
+    if (window.FitnessUI) {
+      window.FitnessUI.markChartReady(canvas);
+    } else {
+      canvas.setAttribute('data-chart-ready', '1');
+    }
+  });
+</script>
+{% endblock %}

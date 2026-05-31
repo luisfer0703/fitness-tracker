@@ -1,0 +1,15 @@
+<div class="ft-card-dark ft-water-card" data-water-widget>
+  <div class="ft-water-card__head">
+    <h3 class="ft-card-title" style="margin:0;">💧 Agua de hoy</h3>
+    <span class="ft-water-card__pct"><span data-water-count>{{ ctx.vasos_hoy }}</span> / <span data-water-meta>{{ ctx.meta_vasos }}</span> vasos · <span data-water-pct>{{ ctx.agua_pct }}</span>%</span>
+  </div>
+  <div class="ft-water-bar">
+    <span data-water-bar style="width:{{ ctx.agua_pct }}%;"></span>
+  </div>
+  <div class="ft-water-glasses" aria-hidden="true">
+    {% for i in range(ctx.meta_vasos) %}
+    <span class="ft-water-glass{% if i < ctx.vasos_hoy %} ft-water-glass--filled{% endif %}">💧</span>
+    {% endfor %}
+  </div>
+  <button type="button" class="ft-water-add" data-agua-add>+ Registrar 1 vaso (250 ml)</button>
+</div>

@@ -1,0 +1,150 @@
+{% extends "app_shell.html" %}
+{% block title %}Progreso — {{ ctx.primer_nombre }}{% endblock %}
+
+{% block ft_content %}
+<div class="ft-page-intro">
+  <h1 class="ft-page-title">Progreso</h1>
+</div>
+
+{% if ctx.progreso is not none %}
+<div class="ft-card-dark">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <span>Meta de peso</span>
+    <strong style="color:var(--ft-teal);font-size:1.25rem;">{{ ctx.progreso|round(0) }}%</strong>
+  </div>
+  <div style="height:10px;background:rgba(43,58,87,.6);border-radius:999px;margin-top:.5rem;overflow:hidden;">
+    <div style="height:100%;width:{{ [ctx.progreso, 100]|min }}%;background:var(--ft-teal);"></div>
+  </div>
+  <p class="p" style="margin:.5rem 0 0;">{{ ctx.peso_actual|round(1) }} kg → meta {{ ctx.objetivo_peso }} kg</p>
+</div>
+{% endif %}
+
+{% if ctx.alerts %}
+<div class="ft-card-dark">
+  <h3 style="margin:0 0 .5rem;color:var(--ft-teal);">Insights</h3>
+  <ul class="clean" style="margin:0;color:var(--text);">
+    {% for a in ctx.alerts %}<li>{{ a }}</li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<div class="ft-card-dark">
+  <h3 style="margin:0 0 .5rem;">Pasos de hoy</h3>
+  <p class="p" style="margin:0 0 .75rem;font-size:.85rem;">
+    {% if ctx.pasos_hoy is not none %}
+      <strong>{{ ctx.pasos_hoy }}</strong> / {{ ctx.meta_pasos }} pasos
+      <span class="ft-badge ft-badge--ok">{{ ctx.pasos_fuente or 'registrado' }}</span>
+    {% else %}
+      Sin registro hoy — en Inicio verás una estimación hasta que registres tus pasos.
+    {% endif %}
+  </p>
+  <form action="{{ url_for('registrar_pasos', usuario_id=usuario['id']) }}" method="POST" style="display:flex;gap:.5rem;">
+    <input type="number" name="pasos" min="0" max="100000" placeholder="Pasos de hoy" required
+      style="flex:1;border-radius:12px;border:1px solid rgba(43,58,87,.8);background:var(--ft-card);padding:.75rem;color:var(--text);">
+    <input type="hidden" name="fuente" value="manual">
+    <button type="submit" style="border:none;background:var(--ft-teal);color:#042a27;font-weight:800;border-radius:12px;padding:0 1rem;">Guardar</button>
+  </form>
+</div>
+
+<div class="ft-card-dark">
+  <h3 style="margin:0 0 .75rem;">Registrar peso</h3>
+  <form action="{{ url_for('registrar_peso', usuario_id=usuario['id']) }}" method="POST" style="display:flex;gap:.5rem;flex-wrap:wrap;">
+    <input type="number" step="0.1" name="peso" required min="20" max="300" placeholder="kg" style="flex:1;min-width:140px;border-radius:12px;border:1px solid rgba(43,58,87,.8);background:var(--ft-card);padding:.85rem;color:var(--text);">
+    <button type="submit" style="border:none;background:var(--ft-teal);color:#042a27;font-weight:800;border-radius:12px;padding:0 1.2rem;min-height:48px;">Guardar</button>
+  </form>
+</div>
+
+{% include 'partials/water_widget.html' %}
+
+<div class="ft-card-dark ft-skeleton-wrap ft-skeleton-wrap--loading" data-skeleton="chart">
+  <h3 style="margin:0 0 .75rem;">Evolución de peso</h3>
+  <div class="ft-skeleton ft-skeleton-chart" style="height:220px;" aria-hidden="true"></div>
+  <div class="chart-wrap ft-skeleton-content" style="height:220px;" hidden>
+    <canvas id="graficaPeso"></canvas>
+  </div>
+</div>
+
+{% if ctx.weekly %}
+<div class="ft-card-dark">
+  <h3 style="margin:0 0 .5rem;">Resumen semanal</h3>
+  {% for w in ctx.weekly %}
+    <div style="display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid rgba(43,58,87,.4);font-size:.9rem;">
+      <span>{{ w.label }}</span>
+      <strong>{{ w.avg|round(1) }} kg</strong>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem;">
+  <a href="{{ url_for('editar_usuario', usuario_id=usuario['id']) }}" class="btn btn--ghost" style="text-decoration:none;flex:1;text-align:center;">✏️ Editar perfil</a>
+  <button type="button" class="btn btn--danger" id="btnEliminarUsuario" style="flex:1;">🗑️ Eliminar</button>
+</div>
+
+<div class="modal-overlay" id="modalEliminar">
+  <div class="modal">
+    <h3 class="modal__title">Eliminar usuario</h3>
+    <p class="modal__text">¿Eliminar a <strong>{{ usuario['nombre'] }}</strong> y todos sus datos?</p>
+    <form method="POST" action="/usuario/{{ usuario['id'] }}/eliminar">
+      <div class="modal__actions">
+        <button type="button" class="btn btn--ghost" id="btnCancelar">Cancelar</button>
+        <button type="submit" class="btn btn--danger">Eliminar</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    (function(){
+      var m=document.getElementById('modalEliminar'),b=document.getElementById('btnEliminarUsuario'),c=document.getElementById('btnCancelar');
+      if(b&&m)b.onclick=function(){m.classList.add('activo');};
+      if(c&&m)c.onclick=function(){m.classList.remove('activo');};
+      if(m)m.onclick=function(e){if(e.target===m)m.classList.remove('activo');};
+    })();
+
+    const canvas = document.getElementById('graficaPeso');
+    if (!canvas) return;
+
+    const wrap = canvas.closest('.ft-skeleton-content');
+    if (wrap) {
+      wrap.hidden = false;
+      wrap.removeAttribute('hidden');
+    }
+
+    const fechas = {{ ctx.fechas | tojson }};
+    const pesos = {{ ctx.pesos | tojson }};
+    const pred = {{ ctx.predicciones | tojson }};
+
+    new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: fechas,
+        datasets: [
+          { label: 'Peso', data: pesos, borderColor: '#26a69a', backgroundColor: 'rgba(38,166,154,.12)', fill: true, tension: 0.3 },
+          { label: 'Predicción', data: pred, borderColor: '#ff8a50', borderDash: [6, 4], tension: 0.3, pointRadius: pred.length ? 2 : 0 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#8b9cb3' } } },
+        scales: {
+          x: { ticks: { color: '#8b9cb3', maxRotation: 45 } },
+          y: { ticks: { color: '#8b9cb3' } }
+        }
+      }
+    });
+
+    if (window.FitnessUI) {
+      window.FitnessUI.markChartReady(canvas);
+    } else {
+      canvas.setAttribute('data-chart-ready', '1');
+    }
+  });
+</script>
+{% endblock %}

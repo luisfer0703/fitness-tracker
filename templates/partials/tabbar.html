@@ -1,0 +1,22 @@
+<nav class="ft-tabbar" aria-label="Navegación principal">
+  <a href="{{ url_for('dashboard', usuario_id=usuario['id']) }}" class="ft-tab {% if active_tab == 'home' %}ft-tab--active{% endif %}">
+    <span class="ico">🔥</span>
+    <span>Inicio</span>
+  </a>
+  <a href="{{ url_for('entrenar', usuario_id=usuario['id']) }}" class="ft-tab {% if active_tab == 'train' %}ft-tab--active{% endif %}">
+    <span class="ico">🏋️</span>
+    <span>Entrenar</span>
+  </a>
+  <a href="{{ url_for('nutricion', usuario_id=usuario['id']) }}" class="ft-tab {% if active_tab == 'nutrition' %}ft-tab--active{% endif %}">
+    <span class="ico">🥗</span>
+    <span>Nutrición</span>
+  </a>
+  <a href="{{ url_for('historial_entreno', usuario_id=usuario['id']) }}" class="ft-tab {% if active_tab == 'historial' or active_tab == 'metas' %}ft-tab--active{% endif %}">
+    <span class="ico">📅</span>
+    <span>Historial</span>
+  </a>
+  <a href="{{ url_for('progreso', usuario_id=usuario['id']) }}" class="ft-tab {% if active_tab == 'progress' %}ft-tab--active{% endif %}">
+    <span class="ico">📈</span>
+    <span>Progreso</span>
+  </a>
+</nav>

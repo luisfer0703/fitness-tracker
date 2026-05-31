@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — {{ usuario["nombre"] }}{% endblock %}
+
+{% block appbar_right %}
+  <a href="{{ url_for('index') }}" class="btn btn--ghost btn--icon" aria-label="Volver al inicio">←</a>
+{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <div class="card__header">
+      <div style="display:flex;align-items:center;gap:.85rem;">
+        <div class="avatar" style="width:58px;height:58px;">
+          {% if usuario["foto_perfil"] %}
+            <img src="{{ foto_perfil_src(usuario['foto_perfil']) }}" alt="Foto de {{ usuario['nombre'] }}">
+          {% else %}
+            <span style="color:var(--muted);font-weight:900;">{{ (usuario["nombre"] or "U")[:1]|upper }}</span>
+          {% endif %}
+        </div>
+        <div>
+          <h1 class="h1" style="margin:0;">{{ usuario["nombre"] }}</h1>
+          <p class="p" style="margin:.2rem 0 0;">Tu panel de progreso y recomendaciones</p>
+        </div>
+      </div>
+      <button type="button" class="btn btn--ghost btn--icon" aria-label="Eliminar usuario" id="btnEliminarUsuario">🗑️</button>
+    </div>
+    <div style="margin-top:.75rem;">
+      <a class="btn btn--ghost btn--icon" href="{{ url_for('editar_usuario', usuario_id=usuario['id']) }}" style="text-decoration:none;display:inline-flex;">✏️ Editar perfil</a>
+    </div>
+
+    <div class="row" style="margin-top:.9rem;">
+      <span class="pill">Edad: <strong style="color:var(--text)">{{ usuario["edad"] }}</strong></span>
+      <span class="pill">Peso: <strong style="color:var(--text)">{{ usuario["peso_actual"] }}</strong> kg</span>
+      <span class="pill">Estatura: <strong style="color:var(--text)">{{ usuario["estatura"] }}</strong> m</span>
+      <span class="pill">Meta: <strong style="color:var(--text)">{{ usuario["objetivo_peso"] }}</strong> kg</span>
+      {% if tiene_rutina %}
+        <span class="pill">📅 {{ dias_rutina or "—" }} días/semana{% if tipo_entreno_label %} · {{ tipo_entreno_label }}{% endif %}</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="grid">
+    <section class="col-12 col-7">
+      {% if alerts %}
+      <div class="card">
+        <h2 class="h2">Insights</h2>
+        <ul class="clean">
+          {% for a in alerts %}
+            <li style="color:var(--text)">{{ a }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      {% if recomendacion %}
+      <div class="card">
+        <h2 class="h2">Recomendación del entrenador</h2>
+        <p class="p" style="color:var(--text)">{{ recomendacion }}</p>
+      </div>
+      {% endif %}
+
+      {% if rutina_dias %}
+      <div class="card">
+        <h2 class="h2">Rutina personalizada</h2>
+        {% if rutina_consejo %}
+          <p class="p"><strong style="color:var(--text)">Nota:</strong> {{ rutina_consejo }}</p>
+        {% endif %}
+        {% for dia in rutina_dias %}
+          <div style="margin-top:1rem;">
+            <div class="pill" style="background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.18);color:var(--accent2);">
+              {{ dia.titulo }} · {{ dia.enfoque }}
+            </div>
+            {% if dia.progresion %}
+              <p class="p" style="margin:.45rem 0 0;"><span class="sub">{{ dia.progresion }}</span></p>
+            {% endif %}
+            <ul class="clean">
+              {% for ej in dia.ejercicios %}
+                <li>{{ ej }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="card">
+        <h2 class="h2">Registrar nuevo peso</h2>
+        <form action="/registrar_peso/{{ usuario['id'] }}" method="POST">
+          <div class="row" style="align-items:flex-end;">
+            <div style="flex:1;min-width:220px;">
+              <label class="label">Nuevo peso (kg)</label>
+              <input type="number" step="0.1" name="peso" required min="20" max="300" placeholder="kg">
+            </div>
+            <button type="submit" class="btn btn--primary" style="width:auto;">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <aside class="col-12 col-5">
+      {% if kcal_objetivo %}
+      <div class="card">
+        <h2 class="h2">Nutrición (estimación)</h2>
+        <div class="row">
+          {% if kcal_base %}<span class="pill">Mantenimiento: <strong style="color:var(--text)">{{ kcal_base }}</strong> kcal</span>{% endif %}
+          <span class="pill">Objetivo: <strong style="color:var(--text)">{{ kcal_objetivo }}</strong> kcal</span>
+          {% if proteina_g %}<span class="pill">Proteína: <strong style="color:var(--text)">{{ proteina_g }}</strong> g/día</span>{% endif %}
+        </div>
+        {% if nutri_nota %}
+          <p class="p" style="margin-top:.75rem;">{{ nutri_nota }}</p>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% if imc %}
+      <div class="card">
+        <h2 class="h2">IMC</h2>
+        <div class="row">
+          <span class="pill">IMC: <strong style="color:var(--text)">{{ imc|round(1) }}</strong></span>
+          <span class="pill">Clasificación: <strong style="color:var(--text)">{{ categoria_imc }}</strong></span>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="card">
+        <h2 class="h2">Entrenador virtual</h2>
+        <p class="p" style="color:var(--text)">{{ mensaje_entrenador }}</p>
+        {% if semanas_objetivo %}
+          <p class="p">🎯 Aproximadamente <strong style="color:var(--text)">{{ semanas_objetivo }}</strong> semanas para tu meta.</p>
+        {% endif %}
+        {% if progreso is not none %}
+          <div class="p" style="margin-top:.65rem;"><strong style="color:var(--text)">Progreso:</strong> {{ progreso|round(0) }}%</div>
+          <div style="height:14px;background:rgba(43,58,87,.75);border-radius:999px;overflow:hidden;margin-top:.4rem;">
+            <div style="height:100%;width: {{ [progreso, 100]|min }}%;background:linear-gradient(90deg, var(--success), var(--accent));"></div>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="card">
+        <h2 class="h2">Historial</h2>
+        {% if registros %}
+          <ul class="clean">
+            {% for registro in registros %}
+              <li>{{ registro["peso"] }} kg — {{ registro["fecha"] }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="p">Aún no hay registros. Empieza registrando tu primer peso.</p>
+        {% endif %}
+      </div>
+
+      {% if weekly %}
+      <div class="card">
+        <h2 class="h2">Resumen semanal</h2>
+        <div style="display:grid;gap:.55rem;">
+          {% for w in weekly %}
+            <div class="pill" style="justify-content:space-between;width:100%;gap:.75rem;">
+              <span>{{ w.label }}</span>
+              <span style="color:var(--text);font-weight:800;">{{ w.avg|round(1) }} kg</span>
+            </div>
+          {% endfor %}
+        </div>
+        <p class="p" style="margin-top:.75rem;">Promedio semanal (últimas {{ weekly|length }} semanas) para ver tendencia sin ruido diario.</p>
+      </div>
+      {% endif %}
+    </aside>
+  </div>
+
+  <div class="card">
+    <h2 class="h2">Evolución y predicción</h2>
+    <div class="chart-wrap">
+      <canvas id="graficaPeso"></canvas>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalEliminar" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+    <div class="modal">
+      <h3 class="modal__title" id="modalTitulo">Eliminar usuario</h3>
+      <p class="modal__text" id="modalTexto">¿Seguro que quieres eliminar a <strong>{{ usuario["nombre"] }}</strong>? Se borrarán todos sus registros de peso.</p>
+      <form method="POST" action="/usuario/{{ usuario['id'] }}/eliminar" id="formEliminar">
+        <div class="modal__actions">
+          <button type="button" class="btn btn--ghost" id="btnCancelar">Cancelar</button>
+          <button type="submit" class="btn btn--danger">Eliminar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    (function() {
+      var modal = document.getElementById('modalEliminar');
+      var btn = document.getElementById('btnEliminarUsuario');
+      if (btn && modal) btn.addEventListener('click', function() { modal.classList.add('activo'); });
+      var cancelar = document.getElementById('btnCancelar');
+      if (cancelar) cancelar.addEventListener('click', function() { if (modal) modal.classList.remove('activo'); });
+      if (modal) modal.addEventListener('click', function(e) { if (e.target === modal) modal.classList.remove('activo'); });
+    })();
+  </script>
+
+  <script>
+    const fechas = {{ fechas | tojson }};
+    const pesos = {{ pesos | tojson }};
+    const predicciones = {{ predicciones | tojson }};
+    const ctx = document.getElementById('graficaPeso');
+    if (ctx) {
+      var colores = { real: 'rgba(34, 211, 238, 0.9)', pred: 'rgba(251, 191, 36, 0.8)', grid: 'rgba(148, 163, 184, 0.15)' };
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: fechas,
+          datasets: [
+            { label: 'Peso real', data: pesos, borderColor: colores.real, backgroundColor: colores.real.replace('0.9', '0.12'), fill: true, borderWidth: 2, tension: 0.3, pointRadius: 3, pointBackgroundColor: colores.real },
+            { label: 'Predicción', data: predicciones, borderColor: colores.pred, borderDash: [6, 4], borderWidth: 2, tension: 0.3, pointRadius: predicciones.length ? 2 : 0, pointBackgroundColor: colores.pred }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#93a4bd', font: { family: 'Outfit' } } } },
+          scales: {
+            x: { grid: { color: colores.grid }, ticks: { color: '#93a4bd', maxRotation: 45 } },
+            y: { grid: { color: colores.grid }, ticks: { color: '#93a4bd' } }
+          }
+        }
+      });
+    }
+  </script>
+{% endblock %}

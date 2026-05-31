@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}Fitness Tracker{% endblock %}
+
+{% block content %}
+  <div class="grid">
+    <section class="col-12 col-7">
+      <div class="card">
+        <div class="card__header">
+          <div>
+            <h1 class="h1">Fitness Tracker</h1>
+            <p class="p">Tu coach inteligente de fitness. Crea tu perfil y entra a tu panel.</p>
+          </div>
+          
+        </div>
+        <hr class="divider">
+
+        <h2 class="h2">Crear usuario</h2>
+        <form action="/crear_usuario" method="POST" id="formUsuario" enctype="multipart/form-data">
+          <div class="grid">
+            <div class="col-12 col-6">
+              <div class="field">
+                <label class="label">Nombre</label>
+                <input type="text" name="nombre" required placeholder="Tu nombre" autocomplete="name">
+              </div>
+            </div>
+            <div class="col-12 col-6">
+              <div class="field">
+                <label class="label">Edad</label>
+                <input type="number" name="edad" required min="1" max="120" placeholder="Años">
+              </div>
+            </div>
+            <div class="col-12 col-6">
+              <div class="field">
+                <label class="label">Peso actual (kg)</label>
+                <input type="number" step="0.1" name="peso_actual" required min="20" max="300" placeholder="kg">
+              </div>
+            </div>
+            <div class="col-12 col-6">
+              <div class="field">
+                <label class="label">Estatura (m)</label>
+                <input type="number" step="0.01" name="estatura" required min="0.5" max="2.5" placeholder="ej. 1.75">
+              </div>
+            </div>
+            <div class="col-12 col-6">
+              <div class="field">
+                <label class="label">Peso objetivo (kg)</label>
+                <input type="number" step="0.1" name="objetivo_peso" required min="20" max="300" placeholder="kg">
+              </div>
+            </div>
+            <div class="col-12 col-6">
+              <div class="field">
+                <label class="label">Foto de perfil (opcional)</label>
+                <input type="file" name="foto_perfil" accept="image/*">
+              </div>
+            </div>
+            <div class="col-12 col-6">
+              <div class="field">
+                <label class="label">Sexo (opcional)</label>
+                <select name="sexo">
+                  <option value="" selected>Prefiero no decir</option>
+                  <option value="m">Masculino</option>
+                  <option value="f">Femenino</option>
+                  <option value="x">Otro</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-12 col-6">
+              <div class="field">
+                <label class="label">Actividad (opcional)</label>
+                <select name="actividad">
+                  <option value="" selected>No sé</option>
+                  <option value="baja">Baja</option>
+                  <option value="media">Media</option>
+                  <option value="alta">Alta</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label" style="display:flex;align-items:center;gap:.6rem;">
+              <input type="checkbox" name="quiere_rutina" id="quiere_rutina" value="1" style="width:22px;height:22px;min-height:22px;min-width:22px;">
+              ¿Quieres que te asignemos una rutina?
+            </label>
+          </div>
+
+          <div class="card" id="rutinaOpciones" hidden style="margin: .75rem 0 0; background: rgba(11,18,32,.65); box-shadow: none;">
+            <h3 class="h3">Preferencias de rutina</h3>
+            <div class="grid">
+              <div class="col-12 col-6">
+                <div class="field">
+                  <label class="label">Días por semana</label>
+                  <select name="dias_rutina">
+                    <option value="2">2 días</option>
+                    <option value="3" selected>3 días</option>
+                    <option value="4">4 días</option>
+                    <option value="5">5 días</option>
+                    <option value="6">6 días</option>
+                    <option value="7">7 días</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-12 col-6">
+                <div class="field">
+                  <label class="label">Dónde entrenas</label>
+                  <select name="tipo_entreno">
+                    <option value="">Elegir…</option>
+                    <option value="gym">🏋️ Gimnasio</option>
+                    <option value="casa">🏠 En casa</option>
+                    <option value="mixto">🔄 Mixto</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn--primary">Guardar usuario</button>
+        </form>
+      </div>
+    </section>
+
+    <aside class="col-12 col-5">
+      <div class="card">
+        <h2 class="h2">Usuarios</h2>
+        {% if usuarios %}
+          <div style="display:grid;gap:.75rem;">
+            {% for usuario in usuarios %}
+              <div class="user-row">
+                <a href="/usuario/{{ usuario['id'] }}">
+                  <div class="avatar" aria-hidden="true">
+                    {% if usuario['foto_perfil'] %}
+                      <img src="{{ foto_perfil_src(usuario['foto_perfil']) }}" alt="">
+                    {% else %}
+                      <span style="color:var(--muted);font-weight:800;">{{ (usuario['nombre'] or 'U')[:1]|upper }}</span>
+                    {% endif %}
+                  </div>
+                  <div>
+                    <div>{{ usuario["nombre"] }}</div>
+                    <div class="sub">{{ usuario["peso_actual"] }} kg · Meta {{ usuario["objetivo_peso"] }} kg</div>
+                  </div>
+                </a>
+                <button type="button" class="btn btn--ghost btn--icon" aria-label="Eliminar usuario" data-id="{{ usuario['id'] }}" data-nombre="{{ usuario['nombre'] }}">🗑️</button>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="p">Aún no hay usuarios. Crea el primero y empieza a registrar tu evolución.</p>
+        {% endif %}
+      </div>
+    </aside>
+  </div>
+
+  <div class="modal-overlay" id="modalEliminar" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+    <div class="modal">
+      <h3 class="modal__title" id="modalTitulo">Eliminar usuario</h3>
+      <p class="modal__text" id="modalTexto">¿Seguro que quieres eliminar a <strong id="modalNombre"></strong>? Se borrarán todos sus registros de peso.</p>
+      <form method="POST" action="" id="formEliminar">
+        <div class="modal__actions">
+          <button type="button" class="btn btn--ghost" id="btnCancelar">Cancelar</button>
+          <button type="submit" class="btn btn--danger">Eliminar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function() {
+    var cb = document.getElementById('quiere_rutina');
+    var opciones = document.getElementById('rutinaOpciones');
+    if (cb && opciones) {
+      function toggle() { opciones.hidden = !cb.checked; }
+      cb.addEventListener('change', toggle);
+      toggle();
+    }
+    var modal = document.getElementById('modalEliminar');
+    var formEliminar = document.getElementById('formEliminar');
+    var modalNombre = document.getElementById('modalNombre');
+    document.querySelectorAll('button[data-id][data-nombre]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var id = this.getAttribute('data-id');
+        var nombre = this.getAttribute('data-nombre');
+        if (modalNombre) modalNombre.textContent = nombre || '';
+        if (formEliminar) formEliminar.action = '/usuario/' + id + '/eliminar';
+        if (modal) modal.classList.add('activo');
+      });
+    });
+    var cancelar = document.getElementById('btnCancelar');
+    if (cancelar) cancelar.addEventListener('click', function() { if (modal) modal.classList.remove('activo'); });
+    if (modal) modal.addEventListener('click', function(e) { if (e.target === modal) modal.classList.remove('activo'); });
+  })();
+</script>
+{% endblock %}
