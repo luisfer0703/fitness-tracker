@@ -80,26 +80,32 @@ body.ft-body input[type="radio"] {
 /* Header inicio */
 .ft-home-header {
   display: flex;
-  flex-direction: column;
-  gap: var(--ft-gap);
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.65rem;
   padding-bottom: var(--ft-gap-lg);
+}
+.ft-greeting {
+  flex: 1;
+  min-width: 0;
 }
 .ft-header-actions {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-end;
-  gap: 0.65rem;
-  flex-wrap: wrap;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
 }
 @media (min-width: 520px) {
   .ft-home-header {
-    flex-direction: row;
-    align-items: flex-start;
-    justify-content: space-between;
     gap: 0.75rem;
   }
   .ft-header-actions {
-    flex-shrink: 0;
+    gap: 0.65rem;
+    max-width: none;
+    flex-wrap: nowrap;
   }
 }
 .ft-greeting h1 {
@@ -113,15 +119,64 @@ body.ft-body input[type="radio"] {
 .ft-profile-area,
 .ft-header-actions {
   display: flex;
-  align-items: center;
-  gap: 0.65rem;
+  align-items: flex-start;
+  gap: 0.45rem;
 }
-@media (max-width: 400px) {
+@media (min-width: 520px) {
+  .ft-profile-area,
+  .ft-header-actions {
+    align-items: center;
+    gap: 0.65rem;
+  }
+}
+.ft-streak-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  height: 40px;
+  padding: 0 0.55rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 138, 80, 0.35);
+  background: rgba(255, 138, 80, 0.12);
+  color: var(--ft-orange);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.ft-streak-badge__ico {
+  font-size: 1rem;
+  line-height: 1;
+}
+.ft-streak-badge__num {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+.ft-streak-badge__lbl {
+  font-size: 0.68rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+@media (min-width: 520px) {
+  .ft-streak-badge {
+    display: none;
+  }
+}
+@media (max-width: 519px) {
   .ft-profile-mini__meta {
     display: none;
   }
   .ft-profile-mini {
     gap: 0;
+  }
+}
+@media (max-width: 360px) {
+  .ft-streak-badge__lbl {
+    display: none;
+  }
+  .ft-header-actions {
+    gap: 0.3rem;
+  }
+  .ft-greeting h1 {
+    font-size: 1.2rem;
   }
 }
 .ft-bell {

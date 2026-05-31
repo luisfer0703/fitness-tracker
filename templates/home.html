@@ -17,6 +17,11 @@
       🔔
       {% if ctx.alerts %}<span class="ft-bell__badge"></span>{% endif %}
     </a>
+    <div class="ft-streak-badge" aria-label="Racha {{ ctx.streak }} días">
+      <span class="ft-streak-badge__ico" aria-hidden="true">🔥</span>
+      <span class="ft-streak-badge__num">{{ ctx.streak }}</span>
+      <span class="ft-streak-badge__lbl">días</span>
+    </div>
     <a href="{{ url_for('editar_usuario', usuario_id=usuario['id']) }}" class="ft-profile-mini">
       <div class="avatar" style="width:40px;height:40px;">
         {% if usuario['foto_perfil'] %}
